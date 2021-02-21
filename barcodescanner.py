@@ -10,8 +10,14 @@ from picamera import PiCamera
 from picamera.array import PiRGBArray
 import os
 import time
+import RPi.GPIO as GPIO
 
 class BarcodeScanner():
+	def __init__(self):
+		GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+		GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # button for delete
+		GPIO.setup(16, GPIO.OUT) # Green Light
+		GPIO.setup(18, GPIO.OUT) # Buzzer
 
 	def capture_image(self):
 		# initialize the camera and grab a reference to the raw camera capture
@@ -33,9 +39,26 @@ class BarcodeScanner():
 			for barcode in barcodes:
 				decoded = barcode.data.decode()
 				print(decoded)
+				GPIO.output(16, GPIO.HIGH)
+				GPIO.output(18, GPIO.HIGH)
+				time.sleep(0.5)
+				GPIO.output(16, GPIO.LOW)
+				GPIO.output(18, GPIO.LOW)
 
 	def delete_image(self):
 		os.remove("code.jpeg")
+
+	def button_callback(self, temp):
+		print("Button was pressed!")
+		# GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+	def button_test(self):
+		try:
+			GPIO.add_event_detect(10, GPIO.RISING, callback=self.button_callback) # Setup event on pin 10 rising edge
+			message = input("Press enter to quit\n\n")
+			GPIO.cleanup()
+		except KeyboardInterrupt:
+			GPIO.cleanup()
 
 	def main(self):
 		image_in_memory = False
@@ -52,10 +75,13 @@ class BarcodeScanner():
 				self.delete_image()
 
 
+
+
 if __name__ == '__main__':
 	# barcode_image()
 	# Scanner()
 	bs = BarcodeScanner()
+	# bs.button_test()
 	bs.main()
 
 
