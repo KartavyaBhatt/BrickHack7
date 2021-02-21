@@ -6,9 +6,9 @@ client = MongoClient()
 client = MongoClient('localhost', 27017)
 
 # Debugging
-db = client['productdb']
-col = db['product']
-col.delete_many({})
+# db = client['productdb']
+# col = db['product']
+# col.delete_many({})
 
 class MongoDB:
     def insertItem(self, barcode):
