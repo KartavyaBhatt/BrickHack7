@@ -1,7 +1,7 @@
 import requests
 
 class API:
-    def addItem(self, barcode):
+    def getItemDetails(self, barcode):
         payload={}
         headers = {}
 
@@ -37,5 +37,5 @@ class API:
         'pPrice': price,
         'pQuantity': quantity,
         'pImage': img}
-        
+
         return data
