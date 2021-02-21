@@ -21,12 +21,10 @@
     // Draw the chart and set the chart values
     function drawChart() {
       var data = google.visualization.arrayToDataTable([
-      ['Task', 'Hours per Day'],
-      ['Work', 8],
-      ['Eat', 2],
-      ['TV', 4],
-      ['Gym', 2],
-      ['Sleep', 8]
+      ['Grocery Items', 'Usage'],
+      ['Used', 8],
+      ['Expired', 3],
+      ['In-Use', 4],
     ]);
     
       // Optional; add a title and set the width and height of the chart
@@ -37,6 +35,9 @@
       chart.draw(data, options);
     }
     </script>
+	<h1>February Usage</h1>
+	<p>Total number of Items you used: 15 </p>
+
     </div>
     
 

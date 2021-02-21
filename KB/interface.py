@@ -37,6 +37,7 @@ class API:
         'pPrice': price,
         'pQuantity': quantity,
         'pImage': img,
-        'pBarcode': barcode}
+        'pBarcode': barcode,
+        'pExpiry': '04-25-2021'}
 
         return data

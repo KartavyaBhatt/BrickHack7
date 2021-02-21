@@ -9,7 +9,7 @@ from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 
-app.config["MONGO_URI"] = "mongodb://localhost:5000/productdb"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/productdb"
 mongo = PyMongo(app)
 
 @app.route('/')
@@ -20,5 +20,4 @@ def index():
 
 @app.route('/budget')
 def moneyUse():
-    # return render_template("Graphs.html", )
-    return
+    return render_template("Graphs.html", )
