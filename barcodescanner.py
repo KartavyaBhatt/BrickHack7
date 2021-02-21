@@ -57,16 +57,44 @@ class BarcodeScanner():
 		self.red_light = 40
 		self.green_light = 37
 		self.buzzer = 38
+		self.button_remove = 32
 
 		GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # button for delete
 		GPIO.setup(self.green_light, GPIO.OUT) # Green Light
 		GPIO.setup(self.red_light, GPIO.OUT) # Red Light
 		GPIO.setup(self.buzzer, GPIO.OUT) # Buzzer
+		GPIO.setup(self.button_remove, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # button for remove
 
 		GPIO.add_event_detect(10, GPIO.RISING, callback=self.button_callback)
+		GPIO.add_event_detect(self.button_remove, GPIO.RISING, callback=self.remove_item)
 		# lcd.write_string('Hello world!')
 		# message = input("Press enter to quit\n\n")
 		# lcd.clear()
+
+	def remove_item():
+		print("Enter Remove")
+		self.lcd.clear()
+		self.lcd.write_string('Scan the item')
+		if self.code != None:
+			self.send_to_mongo(override=True)
+		scanned = False
+		image_in_memory = False
+		while scanned != True:
+			self.capture_image()
+			image_in_memory = True
+			barcode = self.get_barcode()
+
+			if barcode != None:
+				self.code = barcode
+				self.db.doneWithItem(self.code)
+				self.lcd.clear()
+				self.lcd.write_string('Item removed! Good Job!')
+				self.code = None
+				scanned = True
+
+			self.delete_image()
+			image_in_memory = False
+			time.sleep(0.5)
 
 	def capture_image(self):
 		# initialize the camera and grab a reference to the raw camera capture
@@ -81,7 +109,13 @@ class BarcodeScanner():
 
 	def send_to_mongo(self, override):
 		time_elapsed = time.time() - self.start_time
-		if (self.send_to_db == False and time_elapsed < self.delete_wait_time and self.code != None) or override == True:
+		if self.send_to_db == False and time_elapsed > self.delete_wait_time and self.code != None:
+			print("Adding to MongoDB")
+			self.db.insertItem(self.code)
+			self.send_to_db = True
+			self.code = None
+		elif override == True:
+			print("Adding to MongoDB")
 			self.db.insertItem(self.code)
 			self.send_to_db = True
 			self.code = None
@@ -101,7 +135,7 @@ class BarcodeScanner():
 				self.start_time = time.time()
 				self.send_to_db = False
 				print(decoded)
-				self.lcd.write_string('Item Added!')
+				self.lcd.write_string('Item Added! :)')
 				GPIO.output(self.green_light, GPIO.HIGH)
 				GPIO.output(self.buzzer, GPIO.HIGH)
 				time.sleep(0.5)
@@ -117,6 +151,8 @@ class BarcodeScanner():
 		print("Button was pressed!")
 		time_elapsed = time.time() - self.start_time
 		if time_elapsed < self.delete_wait_time:
+			self.lcd.clear()
+			self.lcd.write_string('Deleted! We got you!!')
 			print("Made the item disappear. We challenge James Bond to find it.")
 			self.code = None
 			GPIO.output(self.green_light, GPIO.HIGH)
@@ -134,6 +170,8 @@ class BarcodeScanner():
 			GPIO.output(self.buzzer, GPIO.LOW)
 		else:
 			print("Try deleting using WebApp!")
+			self.lcd.clear()
+			self.lcd.write_string('Delete in App!')
 			GPIO.output(self.red_light, GPIO.HIGH)
 			GPIO.output(self.buzzer, GPIO.HIGH)
 			time.sleep(1)
