@@ -9,7 +9,6 @@ class MongoDB:
         db = client['productdb']
         col = db['product']
         data = API().addItem(barcode)
-        # cursor = col.find({'_id': data['_id']}).count()
 
         if col.find({'_id': data['_id']}).count() > 0:
             col.update({'_id': data['_id']}, {'$inc': {'pQuantity': 1}})
