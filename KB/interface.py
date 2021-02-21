@@ -31,11 +31,12 @@ class API:
         price = data["price"]
         quantity = 1
 
-        data = {'_id': sku,
+        data = {'pid': sku,
         'pName': name,
         'pCal': calories,
         'pPrice': price,
         'pQuantity': quantity,
-        'pImage': img}
+        'pImage': img,
+        'pBarcode': barcode}
 
         return data
