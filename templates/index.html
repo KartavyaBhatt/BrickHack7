@@ -10,9 +10,9 @@
   <div class="mobilecontainer">
    <h1>Cleveridge</h1>
    
-   <img src="../static/image/tomato.jpg" height="60px" width="60px" style="float: left"> 
+   <img src={{ first_item['pImage'] }} height="60px" width="60px" style="float: left"> 
    <div>
-   <h2>Sugar Added</h2>
+   <h2>{{ first_item['pName'] }}</h2>
    <p>Expires on 5/12/2021</p>
   </div>
   
@@ -21,9 +21,9 @@
     {% for item in items %}
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingOne">
-            <button class="clearfix accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            <button class="clearfix accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#item1">
                 <div class="itemxx">
-                <img src="../static/image/tomato.jpg" height="30px" width="30px">
+                <img src={{ item['pImage'] }} height="30px" width="30px">
                 <span>{{ item['pName'] }}</span>
                 </div>
                 <div>
@@ -31,7 +31,7 @@
                 </div>
             </button>
             </h2>
-            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+            <div id="item1" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
             <div class="accordion-body">
                 <div class="quantityxx">
                 <span>Quantity: {{ item['pQuantity'] }}</span>
