@@ -37,5 +37,5 @@ class API:
         'pPrice': price,
         'pQuantity': quantity,
         'pImage': img}
-        print(barcode, sku, name)
+        
         return data
