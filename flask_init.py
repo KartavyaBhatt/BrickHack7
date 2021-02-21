@@ -9,7 +9,7 @@ from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 
-app.config["MONGO_URI"] = "mongodb://localhost:27017/productdb"
+app.config["MONGO_URI"] = "mongodb://localhost:5000/productdb"
 mongo = PyMongo(app)
 
 @app.route('/')
@@ -18,4 +18,7 @@ def index():
     first_item = mongo.db.product.find().sort("_id", -1).limit(1).__getitem__(0)
     return render_template("index.html", items=items, first_item=first_item)
 
-# server.stop();
+@app.route('/budget')
+def moneyUse():
+    # return render_template("Graphs.html", )
+    return
