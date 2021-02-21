@@ -11,13 +11,62 @@ from picamera.array import PiRGBArray
 import os
 import time
 import RPi.GPIO as GPIO
+import Adafruit_CharLCD as LCD
+from RPLCD import CharLCD
+from dbConn import MongoDB
+
+
+
 
 class BarcodeScanner():
 	def __init__(self):
-		GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+		
+		self.code = None
+		self.start_time = time.time()
+		self.send_to_db = False
+		self.delete_wait_time = 5
+
+		# for BCM Mode
+		# lcd_rs = 25
+		# lcd_en = 24
+		# lcd_d4 = 23
+		# lcd_d5 = 17
+		# lcd_d6 = 18
+		# lcd_d7 = 22
+		# lcd_backlight = 4
+
+		# for Board Mode
+		lcd_rs = 22
+		lcd_en = 18
+		lcd_d4 = 16
+		lcd_d5 = 11
+		lcd_d6 = 12
+		lcd_d7 = 15
+		lcd_backlight = 4
+
+		# Define LCD column and row size for 16x2 LCD.
+		lcd_columns = 16
+		lcd_rows = 2
+
+		self.lcd = CharLCD(cols=lcd_columns, rows=lcd_rows, pin_rs=lcd_rs, pin_e=lcd_en, pins_data=[lcd_d4, lcd_d5, lcd_d6, lcd_d7], numbering_mode=GPIO.BOARD)
+		self.lcd.clear()
+
+		self.db = MongoDB()
+
+		GPIO.setmode(GPIO.BOARD)
+		self.red_light = 40
+		self.green_light = 37
+		self.buzzer = 38
+
 		GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # button for delete
-		GPIO.setup(16, GPIO.OUT) # Green Light
-		GPIO.setup(18, GPIO.OUT) # Buzzer
+		GPIO.setup(self.green_light, GPIO.OUT) # Green Light
+		GPIO.setup(self.red_light, GPIO.OUT) # Red Light
+		GPIO.setup(self.buzzer, GPIO.OUT) # Buzzer
+
+		GPIO.add_event_detect(10, GPIO.RISING, callback=self.button_callback)
+		# lcd.write_string('Hello world!')
+		# message = input("Press enter to quit\n\n")
+		# lcd.clear()
 
 	def capture_image(self):
 		# initialize the camera and grab a reference to the raw camera capture
@@ -30,6 +79,14 @@ class BarcodeScanner():
 			# camera.capture('pics/'+i+'.jpeg')
 			# image = rawCapture.array
 
+	def send_to_mongo(self, override):
+		time_elapsed = time.time() - self.start_time
+		if (self.send_to_db == False and time_elapsed < self.delete_wait_time and self.code != None) or override == True:
+			self.db.insertItem(self.code)
+			self.send_to_db = True
+			self.code = None
+
+
 	def get_barcode(self):
 		path = "code.jpeg"
 		# path = 'pics/'+i+'.jpeg'
@@ -37,20 +94,59 @@ class BarcodeScanner():
 		barcodes = pyzbar.decode(image)
 		if barcodes != None:
 			for barcode in barcodes:
-				decoded = barcode.data.decode()
+				self.lcd.clear()
+				if self.send_to_db == False and self.code != None:
+					self.send_to_mongo(override = True)
+				decoded = str(barcode.data.decode())
+				self.start_time = time.time()
+				self.send_to_db = False
 				print(decoded)
-				GPIO.output(16, GPIO.HIGH)
-				GPIO.output(18, GPIO.HIGH)
+				self.lcd.write_string('Item Added!')
+				GPIO.output(self.green_light, GPIO.HIGH)
+				GPIO.output(self.buzzer, GPIO.HIGH)
 				time.sleep(0.5)
-				GPIO.output(16, GPIO.LOW)
-				GPIO.output(18, GPIO.LOW)
+				GPIO.output(self.green_light, GPIO.LOW)
+				GPIO.output(self.buzzer, GPIO.LOW)
+				return decoded
+		return None
 
 	def delete_image(self):
 		os.remove("code.jpeg")
 
 	def button_callback(self, temp):
 		print("Button was pressed!")
-		# GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		time_elapsed = time.time() - self.start_time
+		if time_elapsed < self.delete_wait_time:
+			print("Made the item disappear. We challenge James Bond to find it.")
+			self.code = None
+			GPIO.output(self.green_light, GPIO.HIGH)
+			GPIO.output(self.buzzer, GPIO.HIGH)
+			time.sleep(0.3)
+			GPIO.output(self.green_light, GPIO.LOW)
+			GPIO.output(self.buzzer, GPIO.LOW)
+
+			time.sleep(0.3)
+
+			GPIO.output(self.green_light, GPIO.HIGH)
+			GPIO.output(self.buzzer, GPIO.HIGH)
+			time.sleep(0.3)
+			GPIO.output(self.green_light, GPIO.LOW)
+			GPIO.output(self.buzzer, GPIO.LOW)
+		else:
+			print("Try deleting using WebApp!")
+			GPIO.output(self.red_light, GPIO.HIGH)
+			GPIO.output(self.buzzer, GPIO.HIGH)
+			time.sleep(1)
+			GPIO.output(self.red_light, GPIO.LOW)
+			GPIO.output(self.buzzer, GPIO.LOW)
+
+			time.sleep(1)
+
+			GPIO.output(self.red_light, GPIO.HIGH)
+			GPIO.output(self.buzzer, GPIO.HIGH)
+			time.sleep(1)
+			GPIO.output(self.red_light, GPIO.LOW)
+			GPIO.output(self.buzzer, GPIO.LOW)
 
 	def button_test(self):
 		try:
@@ -60,17 +156,26 @@ class BarcodeScanner():
 		except KeyboardInterrupt:
 			GPIO.cleanup()
 
+
 	def main(self):
+		
 		image_in_memory = False
 		try:
 			while True:
 				self.capture_image()
 				image_in_memory = True
-				self.get_barcode()
+				barcode = self.get_barcode()
+
+				if barcode != None:
+					self.code = barcode
+
+				self.send_to_mongo(override=False)
 				self.delete_image()
 				image_in_memory = False
 				time.sleep(0.5)
 		except KeyboardInterrupt:
+			self.lcd.clear()
+			GPIO.cleanup()
 			if image_in_memory == True:
 				self.delete_image()
 
