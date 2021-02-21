@@ -13,7 +13,7 @@ import time
 
 class BarcodeScanner():
 
-	def capture_image():
+	def capture_image(self):
 		# initialize the camera and grab a reference to the raw camera capture
 		with PiCamera() as camera:
 			# rawCapture = PiRGBArray(camera)
@@ -24,7 +24,7 @@ class BarcodeScanner():
 			# camera.capture('pics/'+i+'.jpeg')
 			# image = rawCapture.array
 
-	def get_barcode():
+	def get_barcode(self):
 		path = "code.jpeg"
 		# path = 'pics/'+i+'.jpeg'
 		image = cv2.imread(path)
@@ -34,10 +34,10 @@ class BarcodeScanner():
 				decoded = barcode.data.decode()
 				print(decoded)
 
-	def delete_image():
+	def delete_image(self):
 		os.remove("code.jpeg")
 
-	def main():
+	def main(self):
 		image_in_memory = False
 		try:
 			while True:
@@ -46,7 +46,6 @@ class BarcodeScanner():
 				self.get_barcode()
 				self.delete_image()
 				image_in_memory = False
-				i-=-1
 				time.sleep(0.5)
 		except KeyboardInterrupt:
 			if image_in_memory == True:
