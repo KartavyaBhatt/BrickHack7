@@ -68,3 +68,13 @@ class MongoDB:
         db = client['productdb']
         col = db[colName]
         col.delete_many({})
+
+    def totalExpense(self, colName):
+        db = client['productdb']
+        col = db[colName]
+        cursor = col.find({})
+        total = 0
+        for i in cursor:
+            total += i['pQuantity'] * i ['pPrice']
+
+        return total
